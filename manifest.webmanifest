@@ -1,11 +1,1 @@
-{
-  "name": "TODAY+ 個人代辦管理",
-  "short_name": "TODAY+",
-  "description": "每日、每週與每月任務管理",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#f7f4ed",
-  "theme_color": "#263b5a",
-  "lang": "zh-TW",
-  "icons": []
-}
+{"name":"TODAY+ 個人代辦管理","short_name":"TODAY+","start_url":"./","display":"standalone","background_color":"#f7f3eb","theme_color":"#263b50","description":"清楚安排每天、每週與每月的任務"}

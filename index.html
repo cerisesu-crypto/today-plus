@@ -1,111 +1,12 @@
 <!doctype html>
-<html lang="zh-Hant">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#263b5a">
-  <meta name="description" content="TODAY+ 個人生活與任務管理">
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="styles.css">
-  <title>TODAY+</title>
-</head>
-<body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div>
-        <div class="eyebrow">YOUR DAY, IN ORDER</div>
-        <h1>TODAY<span>+</span></h1>
-      </div>
-      <button class="avatar" aria-label="個人設定">＋</button>
-    </header>
-
-    <main>
-      <section class="welcome-row">
-        <div>
-          <p class="muted" id="today-date"></p>
-          <h2>今天，從一件事開始。</h2>
-        </div>
-        <div class="week-chip" id="week-label">本週</div>
-      </section>
-
-      <section class="summary-card">
-        <div class="summary-copy">
-          <span class="card-kicker">TODAY'S PROGRESS</span>
-          <strong id="progress-number">0%</strong>
-          <span class="summary-detail" id="progress-detail">已完成 0 / 0 項任務</span>
-        </div>
-        <div class="progress-ring" id="progress-ring" role="img" aria-label="今日完成率 0%">
-          <div class="ring-inner"><span id="ring-number">0%</span></div>
-        </div>
-      </section>
-
-      <section class="section-heading">
-        <div>
-          <span class="card-kicker">YOUR TASKS</span>
-          <h3 id="task-heading">今日待辦</h3>
-        </div>
-        <button class="text-button" id="show-all">查看全部</button>
-      </section>
-
-      <section class="task-list" id="task-list"></section>
-      <div class="empty-state" id="empty-state">
-        <div class="empty-icon">✦</div>
-        <strong>今天還沒有安排</strong>
-        <p>把想完成的事情加進來吧。</p>
-      </div>
-
-      <section class="weekly-card">
-        <div class="weekly-top">
-          <div>
-            <span class="card-kicker">THIS WEEK</span>
-            <h3>本週進度</h3>
-          </div>
-          <span class="weekly-percent" id="week-percent">0%</span>
-        </div>
-        <div class="bar-track"><div class="bar-fill" id="week-bar"></div></div>
-        <p class="weekly-note" id="week-note">一步一步完成你的本週目標。</p>
-      </section>
-    </main>
-
-    <button class="add-button" id="add-task" aria-label="新增任務">＋ <span>新增任務</span></button>
-
-    <nav class="bottom-nav" aria-label="主要導覽">
-      <button class="nav-item active" data-view="today"><span>⌂</span>首頁</button>
-      <button class="nav-item" data-view="tasks"><span>☷</span>任務</button>
-      <button class="nav-item" data-view="calendar"><span>▦</span>月曆</button>
-      <button class="nav-item" data-view="stats"><span>◔</span>統計</button>
-    </nav>
-  </div>
-
-  <dialog id="task-dialog">
-    <form id="task-form" method="dialog">
-      <div class="dialog-head">
-        <div><span class="card-kicker">MAKE IT HAPPEN</span><h2>新增任務</h2></div>
-        <button type="button" class="close-button" id="close-dialog">×</button>
-      </div>
-      <label>任務名稱<input id="task-title" maxlength="80" placeholder="例如：整理房間" required></label>
-      <div class="form-grid">
-        <label>日期<input id="task-date" type="date" required></label>
-        <label>時間<input id="task-time" type="time"></label>
-      </div>
-      <div class="form-grid">
-        <label>分類
-          <select id="task-category">
-            <option value="生活">生活</option><option value="工作">工作</option>
-            <option value="健康">健康</option><option value="購物">購物</option>
-            <option value="財務">財務</option><option value="其他">其他</option>
-          </select>
-        </label>
-        <label>優先順序
-          <select id="task-priority">
-            <option value="中">中</option><option value="高">高</option><option value="低">低</option>
-          </select>
-        </label>
-      </div>
-      <label>備註（選填）<textarea id="task-note" rows="2" placeholder="補充說明…"></textarea></label>
-      <button class="submit-button" type="submit">儲存任務</button>
-    </form>
-  </dialog>
-  <script src="app.js"></script>
-</body>
-</html>
+<html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#263b50"><link rel="manifest" href="manifest.webmanifest"><link rel="stylesheet" href="styles.css"><title>TODAY+</title></head>
+<body><div class="app-shell">
+<header class="topbar"><div><div class="eyebrow">YOUR DAILY COMPANION</div><h1>TODAY<span>+</span></h1></div><button class="icon-button" id="topAdd">＋</button></header>
+<main>
+<section id="view-today" class="view active"><div class="welcome"><div><p class="eyebrow">今天也一步一步來</p><h2 id="todayDate"></h2></div><span class="seal">日</span></div><div class="section-heading"><h3>今日任務</h3><span id="todayCount" class="muted"></span></div><div id="todayTasks" class="task-list"></div><section class="progress-card"><div class="section-heading"><div><p class="eyebrow">A LITTLE PROGRESS</p><h3>今日完成進度</h3></div><strong id="todayPercent">0%</strong></div><div class="progress-track"><div id="todayBar" class="progress-fill"></div></div><p id="todayProgressText" class="muted small"></p></section><button class="wide-add" id="todayAdd">＋ 新增任務</button></section>
+<section id="view-tasks" class="view"><div class="page-title"><p class="eyebrow">PLAN & DO</p><h2>任務管理</h2><p class="muted">把想做的事，安排成清楚的小步驟。</p></div><div class="filters"><input id="taskSearch" class="search" placeholder="搜尋任務…"><select id="taskFilter"><option value="all">全部任務</option><option value="active">未完成</option><option value="done">已完成</option></select></div><div class="chips" id="categoryChips"><button class="chip selected" data-category="全部">全部</button><button class="chip" data-category="工作">工作</button><button class="chip" data-category="生活">生活</button><button class="chip" data-category="健康">健康</button><button class="chip" data-category="其他">其他</button></div><div id="allTasks" class="task-list"></div><button class="wide-add" id="tasksAdd">＋ 新增任務</button></section>
+<section id="view-calendar" class="view"><div class="page-title"><p class="eyebrow">YOUR MONTH</p><h2>月曆</h2><p class="muted">看看每一天安排了什麼。</p></div><div class="calendar-card"><div class="month-head"><button id="prevMonth" class="icon-button small-btn">‹</button><h3 id="monthLabel"></h3><button id="nextMonth" class="icon-button small-btn">›</button></div><div class="calendar-grid weekdays"><span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span></div><div id="calendarDays" class="calendar-grid"></div></div><div class="section-heading"><h3 id="selectedDateLabel">當日任務</h3><span id="selectedCount" class="muted"></span></div><div id="calendarTasks" class="task-list"></div><button class="wide-add" id="calendarAdd">＋ 為這一天新增任務</button></section>
+<section id="view-stats" class="view"><div class="page-title"><p class="eyebrow">YOUR MOMENTUM</p><h2>完成統計</h2><p class="muted">看見累積，就會更有動力。</p></div><div class="stats-grid"><article class="stat-card"><span>全部任務</span><strong id="statTotal">0</strong><small>累積建立</small></article><article class="stat-card green"><span>已完成</span><strong id="statDone">0</strong><small>完成紀錄</small></article><article class="stat-card pink"><span>今日完成率</span><strong id="statToday">0%</strong><small>今日進度</small></article><article class="stat-card gold"><span>本月完成</span><strong id="statMonth">0</strong><small>本月任務</small></article></div><div class="progress-card"><p class="eyebrow">THIS WEEK</p><h3>近七日完成狀況</h3><div id="weekBars" class="week-bars"></div></div><p class="muted small note">統計依本機保存的任務紀錄計算。</p></section>
+</main>
+<nav class="bottom-nav"><button class="nav-item active" data-view="today"><span>⌂</span>首頁</button><button class="nav-item" data-view="tasks"><span>☷</span>任務</button><button class="nav-item" data-view="calendar"><span>▦</span>月曆</button><button class="nav-item" data-view="stats"><span>◷</span>統計</button></nav></div>
+<dialog id="taskDialog"><form id="taskForm"><div class="dialog-head"><div><p class="eyebrow">MAKE IT HAPPEN</p><h2 id="dialogTitle">新增任務</h2></div><button type="button" class="icon-button close" id="closeDialog">×</button></div><label>任務名稱<input id="taskTitle" required maxlength="80" placeholder="例如：整理房間"></label><div class="form-row"><label>日期<input id="taskDate" type="date" required></label><label>分類<select id="taskCategory"><option>生活</option><option>工作</option><option>健康</option><option>其他</option></select></label></div><label>時間</label><div class="time-row"><select id="timePeriod"><option>上午</option><option>下午</option><option>晚上</option></select><select id="timeHour"></select><span class="time-unit">點</span></div><label>備註（選填）<textarea id="taskNote" rows="2" placeholder="補充細節…"></textarea></label><div class="dialog-actions"><button type="button" class="cancel-button" id="cancelDialog">取消</button><button type="submit" class="save-button">保存任務</button></div></form></dialog><script src="app.js"></script></body></html>

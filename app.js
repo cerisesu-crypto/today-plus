@@ -1,87 +1,23 @@
-const $ = (id) => document.getElementById(id);
-const STORAGE_KEY = "today-plus-tasks-v1";
-let tasks = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-let currentView = "today";
-
-const todayISO = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
-};
-const parseDate = (s) => new Date(`${s}T00:00:00`);
-const startOfWeek = (date) => { const d = new Date(date); d.setHours(0,0,0,0); d.setDate(d.getDate() - ((d.getDay()+6)%7)); return d; };
-const endOfWeek = (date) => { const d = startOfWeek(date); d.setDate(d.getDate()+7); return d; };
-const save = () => localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
-const dateLabel = (s) => s ? `${Number(s.slice(5,7))}/${Number(s.slice(8,10))}` : "";
-const escapeHTML = (s) => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-
-function setHeader() {
-  const d = new Date();
-  $("today-date").textContent = d.toLocaleDateString("zh-TW",{year:"numeric",month:"long",day:"numeric",weekday:"long"});
-  $("week-label").textContent = `第 ${Math.ceil((((d - new Date(d.getFullYear(),0,1))/86400000) + new Date(d.getFullYear(),0,1).getDay()+1)/7)} 週`;
-}
-function getVisibleTasks() {
-  const now = new Date(), today = todayISO();
-  if (currentView === "today") return tasks.filter(t => t.date === today).sort(sortTasks);
-  if (currentView === "tasks") return [...tasks].sort((a,b)=>a.date.localeCompare(b.date)||sortTasks(a,b));
-  if (currentView === "calendar") {
-    return tasks.filter(t => t.date.slice(0,7) === today.slice(0,7)).sort(sortTasks);
-  }
-  return [...tasks].sort((a,b)=>b.date.localeCompare(a.date));
-}
-function sortTasks(a,b) {
-  const rank = {"高":0,"中":1,"低":2};
-  return (a.time||"99:99").localeCompare(b.time||"99:99") || rank[a.priority]-rank[b.priority];
-}
-function render() {
-  const today = todayISO(), weekStart = startOfWeek(new Date()), weekEnd = endOfWeek(new Date());
-  const todayTasks = tasks.filter(t=>t.date===today);
-  const todayDone = todayTasks.filter(t=>t.done).length;
-  const pct = todayTasks.length ? Math.round(todayDone/todayTasks.length*100) : 0;
-  $("progress-number").textContent = `${pct}%`; $("ring-number").textContent = `${pct}%`;
-  $("progress-detail").textContent = `已完成 ${todayDone} / ${todayTasks.length} 項任務`;
-  $("progress-ring").style.background = `conic-gradient(var(--orange) ${pct}%,#ffffff30 0)`;
-  const weekTasks = tasks.filter(t=>{const d=parseDate(t.date);return d>=weekStart&&d<weekEnd;});
-  const weekDone = weekTasks.filter(t=>t.done).length;
-  const weekPct = weekTasks.length ? Math.round(weekDone/weekTasks.length*100) : 0;
-  $("week-percent").textContent = `${weekPct}%`; $("week-bar").style.width = `${weekPct}%`;
-  $("week-note").textContent = weekTasks.length ? `本週已完成 ${weekDone} 項，還有 ${weekTasks.length-weekDone} 項待完成。` : "新增任務，開始安排本週的節奏。";
-
-  const headings = {today:"今日待辦",tasks:"所有任務",calendar:"本月任務",stats:"任務紀錄"};
-  $("task-heading").textContent = headings[currentView];
-  const visible = getVisibleTasks();
-  $("task-list").innerHTML = visible.map(t=>`
-    <article class="task-card ${t.done?"done":""}">
-      <button class="check" data-toggle="${t.id}" aria-label="${t.done?"取消完成":"標記完成"}">${t.done?"✓":""}</button>
-      <div class="task-main">
-        <div class="task-title">${escapeHTML(t.title)}</div>
-        <div class="task-meta">${dateLabel(t.date)} ${t.time?`・${escapeHTML(t.time)}`:""} ・${escapeHTML(t.category)}${t.note?` ・${escapeHTML(t.note)}`:""}</div>
-      </div>
-      <span class="priority ${t.priority==="高"?"high":t.priority==="低"?"low":""}">${t.priority}優先</span>
-      <button class="delete-button" data-delete="${t.id}" aria-label="刪除任務">×</button>
-    </article>`).join("");
-  $("empty-state").style.display = visible.length ? "none" : "block";
-  $("empty-state").querySelector("strong").textContent = currentView==="today"?"今天還沒有安排":"目前沒有任務";
-  $("empty-state").querySelector("p").textContent = currentView==="today"?"把想完成的事情加進來吧。":"新增一項任務，開始規劃吧。";
-  document.querySelectorAll(".nav-item").forEach(b=>b.classList.toggle("active",b.dataset.view===currentView));
-}
-function openDialog() {
-  $("task-date").value = todayISO(); $("task-time").value = ""; $("task-title").value = ""; $("task-note").value = "";
-  $("task-dialog").showModal(); $("task-title").focus();
-}
-$("add-task").addEventListener("click",openDialog);
-$("close-dialog").addEventListener("click",()=>$("task-dialog").close());
-$("task-form").addEventListener("submit",e=>{
-  e.preventDefault();
-  const title=$("task-title").value.trim(); if(!title)return;
-  tasks.push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),title,date:$("task-date").value,time:$("task-time").value,category:$("task-category").value,priority:$("task-priority").value,note:$("task-note").value.trim(),done:false,createdAt:new Date().toISOString()});
-  save(); $("task-dialog").close(); currentView="today"; render();
-});
-$("task-list").addEventListener("click",e=>{
-  const toggle=e.target.closest("[data-toggle]"); const del=e.target.closest("[data-delete]");
-  if(toggle){const t=tasks.find(x=>x.id===toggle.dataset.toggle);if(t)t.done=!t.done;save();render();}
-  if(del){tasks=tasks.filter(x=>x.id!==del.dataset.delete);save();render();}
-});
-document.querySelectorAll(".nav-item").forEach(b=>b.addEventListener("click",()=>{currentView=b.dataset.view;render();}));
-$("show-all").addEventListener("click",()=>{currentView="tasks";render();});
-setHeader(); render();
-if("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("./sw.js").catch(()=>{});
+const $=id=>document.getElementById(id);
+const todayISO=()=>{let d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`};
+let tasks=JSON.parse(localStorage.getItem('todayPlusTasks')||'[]'),selectedDate=todayISO(),calendarDate=new Date(),category='全部',editingId=null;
+const save=()=>localStorage.setItem('todayPlusTasks',JSON.stringify(tasks)),esc=s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const rate=a=>a.length?Math.round(a.filter(t=>t.done).length/a.length*100):0;
+function card(t){let cls={'工作':'work','健康':'health','其他':'other'}[t.category]||'';return `<article class="task-card ${t.done?'completed':''}"><button class="check ${t.done?'done':''}" data-check="${t.id}">${t.done?'✓':''}</button><div class="task-main"><div class="task-title">${esc(t.title)}</div><div class="task-meta"><span>${t.period} ${t.hour}點</span><span class="tag ${cls}">${esc(t.category)}</span>${t.note?`<span>${esc(t.note)}</span>`:''}</div></div><div class="task-actions"><button class="text-action" data-edit="${t.id}">編輯</button><button class="text-action" data-delete="${t.id}">刪除</button></div></article>`}
+function list(id,a){$(id).innerHTML=a.length?[...a].sort((x,y)=>Number(x.hour)-Number(y.hour)).map(card).join(''):'<div class="empty-state">目前沒有任務，按下新增，為今天安排一件小事吧。</div>'}
+function renderToday(){let a=tasks.filter(t=>t.date===todayISO()),p=rate(a);$('todayDate').textContent=new Intl.DateTimeFormat('zh-TW',{year:'numeric',month:'long',day:'numeric',weekday:'long'}).format(new Date());$('todayCount').textContent=`${a.filter(t=>!t.done).length} 件待完成`;list('todayTasks',a);$('todayPercent').textContent=p+'%';$('todayBar').style.width=p+'%';$('todayProgressText').textContent=`已完成 ${a.filter(t=>t.done).length} / ${a.length} 件任務`}
+function renderTasks(){let q=$('taskSearch').value.trim().toLowerCase(),f=$('taskFilter').value,a=tasks.filter(t=>(category==='全部'||t.category===category)&&(f==='all'||(f==='active'&&!t.done)||(f==='done'&&t.done))&&(!q||t.title.toLowerCase().includes(q)||(t.note||'').toLowerCase().includes(q)));list('allTasks',a)}
+function renderCalendar(){let y=calendarDate.getFullYear(),m=calendarDate.getMonth(),start=new Date(y,m,1).getDay(),n=new Date(y,m+1,0).getDate(),prev=new Date(y,m,0).getDate(),html='';$('monthLabel').textContent=`${y} 年 ${m+1} 月`;for(let i=0;i<42;i++){let d,other=false;if(i<start){d=new Date(y,m-1,prev-start+i+1);other=true}else if(i>=start+n){d=new Date(y,m+1,i-start-n+1);other=true}else d=new Date(y,m,i-start+1);let iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`,cl=['day',other?'other-month':'',iso===todayISO()?'today':'',iso===selectedDate?'selected':'',tasks.some(t=>t.date===iso)?'has-task':''].join(' ');html+=`<button class="${cl}" data-day="${iso}">${d.getDate()}</button>`}$('calendarDays').innerHTML=html;let a=tasks.filter(t=>t.date===selectedDate);$('selectedDateLabel').textContent=new Intl.DateTimeFormat('zh-TW',{month:'long',day:'numeric'}).format(new Date(selectedDate+'T12:00:00'))+' 任務';$('selectedCount').textContent=`${a.length} 件`;list('calendarTasks',a)}
+function renderStats(){let done=tasks.filter(t=>t.done),month=tasks.filter(t=>t.date.slice(0,7)===todayISO().slice(0,7));$('statTotal').textContent=tasks.length;$('statDone').textContent=done.length;$('statToday').textContent=rate(tasks.filter(t=>t.date===todayISO()))+'%';$('statMonth').textContent=month.filter(t=>t.done).length;let html='';for(let i=6;i>=0;i--){let d=new Date();d.setDate(d.getDate()-i);let iso=`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`,p=rate(tasks.filter(t=>t.date===iso));html+=`<div class="bar-col"><div class="bar" style="height:${Math.max(3,p)}%"></div><span>${d.getDate()}日</span></div>`}$('weekBars').innerHTML=html}
+function render(){renderToday();renderTasks();renderCalendar();renderStats()}
+function openDialog(date=selectedDate,id=null){editingId=id;let t=id?tasks.find(x=>x.id===id):null;$('dialogTitle').textContent=t?'編輯任務':'新增任務';$('taskTitle').value=t?.title||'';$('taskDate').value=t?.date||date;$('taskCategory').value=t?.category||'生活';$('timePeriod').value=t?.period||'上午';$('timeHour').value=t?.hour||'9';$('taskNote').value=t?.note||'';$('taskDialog').showModal()}
+function closeDialog(){$('taskDialog').close();editingId=null}
+for(let h=1;h<=12;h++)$('timeHour').insertAdjacentHTML('beforeend',`<option value="${h}">${h}</option>`);
+['topAdd','todayAdd','tasksAdd','calendarAdd'].forEach(id=>$(id).onclick=()=>openDialog(id==='calendarAdd'?selectedDate:todayISO()));
+$('closeDialog').onclick=closeDialog;$('cancelDialog').onclick=closeDialog;
+$('taskForm').onsubmit=e=>{e.preventDefault();let item={id:editingId||String(Date.now()),title:$('taskTitle').value.trim(),date:$('taskDate').value,category:$('taskCategory').value,period:$('timePeriod').value,hour:$('timeHour').value,note:$('taskNote').value.trim(),done:editingId?(tasks.find(t=>t.id===editingId)?.done||false):false};if(!item.title)return;if(editingId)tasks=tasks.map(t=>t.id===editingId?item:t);else tasks.push(item);save();selectedDate=item.date;calendarDate=new Date(item.date+'T12:00:00');closeDialog();render()};
+document.addEventListener('click',e=>{let c=e.target.closest('[data-check]'),ed=e.target.closest('[data-edit]'),del=e.target.closest('[data-delete]'),day=e.target.closest('[data-day]');if(c){let t=tasks.find(t=>t.id===c.dataset.check);t.done=!t.done;save();render()}if(ed)openDialog(todayISO(),ed.dataset.edit);if(del&&confirm('確定刪除這項任務嗎？')){tasks=tasks.filter(t=>t.id!==del.dataset.delete);save();render()}if(day){selectedDate=day.dataset.day;calendarDate=new Date(selectedDate+'T12:00:00');renderCalendar()}});
+document.querySelectorAll('.nav-item').forEach(b=>b.onclick=()=>{document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+b.dataset.view));document.querySelectorAll('.nav-item').forEach(x=>x.classList.toggle('active',x===b));render()});
+$('taskSearch').oninput=renderTasks;$('taskFilter').onchange=renderTasks;$('categoryChips').onclick=e=>{let b=e.target.closest('[data-category]');if(!b)return;category=b.dataset.category;document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('selected',x===b));renderTasks()};
+$('prevMonth').onclick=()=>{calendarDate.setMonth(calendarDate.getMonth()-1);renderCalendar()};$('nextMonth').onclick=()=>{calendarDate.setMonth(calendarDate.getMonth()+1);renderCalendar()};
+if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));render();
